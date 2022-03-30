@@ -222,14 +222,14 @@ export const supported_countries: Country[] = [
 ];
 
 // Export the different stock option colors
-export enum stock_availability_colors {
+export enum stock_status_colourss {
 	HIGH = '#0CC079',
 	MEDIUM = '#FCFC99',
 	LOW = '#FB6962',
 };
 
 // Export the different stock option icons
-export enum stock_availability_icons {
+export enum stock_status_icon {
 	HIGH = ':green_circle:',
 	MEDIUM = ':yellow_circle:',
 	LOW = ':red_circle:',

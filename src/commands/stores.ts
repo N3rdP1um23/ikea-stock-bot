@@ -2,7 +2,7 @@
  *
  * March 29, 2022
  * N3rdP1um23
- * The following file is used to handle any commands related to Countries interaction
+ * The following file is used to handle any commands related to stores interaction
  *
  */
 
@@ -26,7 +26,7 @@ export abstract class Stores {
 		// Check to see if the store wasn't found
 		if(store == undefined) {
 			// Reply with an error message
-			interaction.reply('Oops... That store wasn\'t found. Try `/store country country_code:` (where `country_code` is the countries respective "code" which can be found using the `/countries` command) to view a list of all stores for a given country.');
+			await interaction.reply('Oops... That store wasn\'t found. Try `/store country country_code:` (where `country_code` is the countries respective "code" which can be found using the `/countries` command) to view a list of all stores for a given country.');
 
 			// Return to stop further processing
 			return;
@@ -62,7 +62,7 @@ export abstract class Stores {
 		// Check to see if the country wasn't found
 		if(country == undefined) {
 			// Reply with an error message
-			interaction.reply('Oops... That country wasn\'t found. Try `/countries` to view a list of supported countried and thier respective country codes.');
+			await interaction.reply('Oops... That country wasn\'t found. Try `/countries` to view a list of supported countried and thier respective country codes.');
 
 			// Return to stop further processing
 			return;

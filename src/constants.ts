@@ -220,3 +220,17 @@ export const supported_countries: Country[] = [
 		stores: supported_stores.filter((store: Store) => store.countryCode == 'us').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
 	},
 ];
+
+// Export the different stock option colors
+export enum stock_availability_colors {
+	HIGH = '#0CC079',
+	MEDIUM = '#FCFC99',
+	LOW = '#FB6962',
+};
+
+// Export the different stock option icons
+export enum stock_availability_icons {
+	HIGH = ':green_circle:',
+	MEDIUM = ':yellow_circle:',
+	LOW = ':red_circle:',
+};

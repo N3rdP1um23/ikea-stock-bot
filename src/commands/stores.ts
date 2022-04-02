@@ -95,8 +95,8 @@ export abstract class Stores {
 			// Push the formatted embed to the pages array
 			pages.push(
 				new MessageEmbed()
-				.setFooter({ text: `Page ${Math.ceil((i / 2)) + 1} of ${Math.ceil(country.stores.length / 2)}` })
 				.setTitle(`**Ikea Stores in :flag_${country.code}: ${country.name}**`)
+				.setFooter({ text: `Page ${Math.ceil((i / 2)) + 1} of ${Math.ceil(country.stores.length / 2)}` })
 				.addFields(fields)
 			);
 		}

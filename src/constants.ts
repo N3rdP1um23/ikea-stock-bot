@@ -268,7 +268,7 @@ export function getCountry(country_code: string) {
 }
 
 // Export the different stock option colors
-export enum stock_status_colourss {
+export enum stock_status_colours {
 	HIGH = '#0CC079',
 	MEDIUM = '#FCFC99',
 	LOW = '#FB6962',

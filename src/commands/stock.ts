@@ -10,7 +10,7 @@
 import { CommandInteraction, EmbedFieldData, MessageEmbed } from "discord.js";
 import { Discord, Slash, SlashGroup, SlashOption } from "discordx";
 import { Pagination } from "@discordx/pagination";
-import { stock_status_colourss, stock_status_icon, Store, getCountry } from "../constants.ts";
+import { stock_status_colours, stock_status_icon, Store, getCountry } from "../constants.ts";
 import * as ikea_checker from "ikea-availability-checker";
 import * as ikea_stores from "../../node_modules/ikea-availability-checker/source/lib/stores.js";
 
@@ -25,7 +25,7 @@ export abstract class Stock {
 		// GRab the respective store and format the article number accordingly
 		const store = ikea_stores.default.findOneById(store_id);
 		const country = getCountry(store.countryCode);
-		const article = article_number.replaceAll('.', '').trim();
+		let article = article_number.replaceAll('.', '').trim();
 
 		// Check to see if the requred store exists
 		if (!store) {
@@ -46,7 +46,14 @@ export abstract class Stock {
 		}
 
 		// Query for stock availability
-		const item_stock = await Stock.checkAvailability(store.buCode, article);
+		let item_stock = await Stock.checkAvailability(store.buCode, article);
+
+		// Check to see if the item has a slightly different article number
+		if(typeof item_stock == 'object' && item_stock.stock !== undefined && item_stock.article !== undefined) {
+			// Update the respective references
+			article = item_stock.article;
+			item_stock = item_stock.stock;
+		}
 
 		// Check to see if the item_stock is a string
 		if(typeof item_stock === 'string' || item_stock instanceof String) {
@@ -88,22 +95,22 @@ export abstract class Stock {
 		}
 
 		// Send the stock information
-		await interaction.channel?.send({embeds: [
+		await interaction.reply({embeds: [
 			new MessageEmbed()
-			.setTitle(`**Ikea ${country.name} - ${store.name} - ${article_number} Stock**`)
-			.setColor(stock_status_colourss[item_stock.probability])
+			.setURL(`https://www.ikea.com/${country.code}/${country.language}/p/-${article}`)
+			.setColor(stock_status_colours[item_stock.probability])
+			.setTitle(`**Ikea :flag_${country.code}: ${country.name} - ${store.name} - ${article} Stock**`)
+			.setFooter({ text: `As of ${item_stock.createdAt.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' })} @ ${item_stock.createdAt.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}` })
 			.addFields(
 				{ name: 'Name', value: store.name, inline: true },
 				{ name: 'Id', value: store.buCode, inline: true },
-				{ name: 'Article', value: article_number, inline: true },
+				{ name: 'Article', value: article, inline: true },
 				{ name: '\u200B', value: '\u200B' },
 				{ name: 'Current Stock', value: item_stock.stock.toString() || '0', inline: true },
 				{ name: 'Probability of Availability', value: `${stock_status_icon[item_stock.probability]} ${item_stock.probability}`, inline: true },
 				{ name: 'Estimated Restock Date', value: ((item_stock.restockDate) ? item_stock.restockDate.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'), inline: true },
 				...forecast_data
 			)
-			.setURL(`https://www.ikea.com/${country.code}/${country.language}/search/products/?q=${item_stock.productId}`)
-			.setFooter(`As of ${item_stock.createdAt.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' })} @ ${item_stock.createdAt.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}`)
 		]});
 	}
 
@@ -112,7 +119,7 @@ export abstract class Stock {
 	async country(@SlashOption("country_code") country_code: string, @SlashOption("article_number") article_number: string, interaction: CommandInteraction): Promise<void> {
 		// Grab the respective country and format the article number accordingly
 		const country = getCountry(country_code);
-		const article = article_number.replaceAll('.', '').trim();
+		let article = article_number.replaceAll('.', '').trim();
 
 		// Check to see if the requred country exists
 		if (!country) {
@@ -141,7 +148,14 @@ export abstract class Stock {
 		// Iterate over each of the items in the countries array
 		for (const store of country.stores) {
 			// Query for the articles stock
-			const item_stock = await Stock.checkAvailability(store.buCode, article);
+			let item_stock = await Stock.checkAvailability(store.buCode, article);
+
+			// Check to see if the item has a slightly different article number
+			if(typeof item_stock == 'object' && item_stock.stock !== undefined && item_stock.article !== undefined) {
+				// Update the respective references
+				article = item_stock.article;
+				item_stock = item_stock.stock;
+			}
 
 			// Check to see if the item_stock is valid and didn't return an error
 			if(!(typeof item_stock === 'string' || item_stock instanceof String)) {
@@ -173,12 +187,13 @@ export abstract class Stock {
 			// Push the formatted embed to the pages array
 			pages.push(
 				new MessageEmbed()
+				.setURL(`https://www.ikea.com/${country.code}/${country.language}/p/-${article}`)
+				.setTitle(`**Ikea :flag_${country.code}: ${country.name} - ${store.name} - ${article} Stock**`)
 				.setFooter({ text: `Page ${Math.ceil(current_page + 1)} of ${Math.ceil(total_pages)}` })
-				.setTitle(`**Ikea ${country.name} - ${store.name} - ${article_number} Stock**`)
 				.addFields(
 					{ name: 'Name', value: store.name, inline: true },
 					{ name: 'id', value: store.buCode, inline: true },
-					{ name: 'Article', value: article_number, inline: true },
+					{ name: 'Article', value: article, inline: true },
 					{ name: '\u200B', value: '\u200B' },
 					{ name: 'Current Stock', value: store_stock.stock.toString() || '0', inline: true },
 					{ name: 'Probability of Availability', value: `${stock_status_icon[store_stock.probability]} ${store_stock.probability}`, inline: true },
@@ -207,7 +222,10 @@ export abstract class Stock {
 				// Check to see if the item didn't start with an 's'
 				if(!article.toLocaleLowerCase().startsWith('s')) {
 					// Attempt querying again with an added s
-					return Stock.checkAvailability(buCode, `s${article}`);
+					return {
+						stock: await Stock.checkAvailability(buCode, `s${article}`),
+						article: `s${article}`
+					};
 				}
 
 				// Return with an error message

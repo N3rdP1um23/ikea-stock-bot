@@ -43,12 +43,12 @@ export abstract class Countries {
 					{ name: 'Stores', value: supported_countries[i + 1].stores.length.toString() || '0', inline: true },
 				);
 			}
-			
+
 			// Push the formatted embed to the pages array
 			pages.push(
 				new MessageEmbed()
-				.setFooter({ text: `Page ${Math.ceil((i / 2)) + 1} of ${Math.ceil(supported_countries.length / 2)}` })
 				.setTitle(`**Supported Ikea Countries**`)
+				.setFooter({ text: `Page ${Math.ceil((i / 2)) + 1} of ${Math.ceil(supported_countries.length / 2)}` })
 				.addFields(fields)
 			);
 		}

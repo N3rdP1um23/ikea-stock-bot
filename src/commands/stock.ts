@@ -167,7 +167,7 @@ export abstract class Stock {
 		// Check to see if there's no stock information to list
 		if (Object.keys(country_store_stock).length <= 0) {
 			// Reply with an error message
-			await interaction.reply('Oops... Unfortunately we\'re unable to display stock information for this article under this country. Please try again later.');
+			await interaction.reply('Oops... Unfortunately we\'re unable to display stock information for this article under this country as there\'s no stock information currently. Please try again later.');
 
 			// Return to stop further processing
 			return;
@@ -183,6 +183,115 @@ export abstract class Stock {
 			const current_page = Object.keys(country_store_stock).indexOf(store_buCode);
 			const total_pages = Object.keys(country_store_stock).length;
 			const store_stock = country_store_stock[store_buCode];
+
+			// Push the formatted embed to the pages array
+			pages.push(
+				new MessageEmbed()
+				.setURL(`https://www.ikea.com/${country.code}/${country.language}/p/-${article}`)
+				.setTitle(`**Ikea :flag_${country.code}: ${country.name} - ${store.name} - ${article} Stock**`)
+				.setFooter({ text: `Page ${Math.ceil(current_page + 1)} of ${Math.ceil(total_pages)}` })
+				.addFields(
+					{ name: 'Name', value: store.name, inline: true },
+					{ name: 'id', value: store.buCode, inline: true },
+					{ name: 'Article', value: article, inline: true },
+					{ name: '\u200B', value: '\u200B' },
+					{ name: 'Current Stock', value: store_stock.stock.toString() || '0', inline: true },
+					{ name: 'Probability of Availability', value: `${stock_status_icon[store_stock.probability]} ${store_stock.probability}`, inline: true },
+					{ name: 'Estimated Restock Date', value: ((store_stock.restockDate) ? store_stock.restockDate.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'), inline: true },
+				)
+			);
+		}
+
+		// Notify the user that the stock results are ready
+		await interaction.channel?.send(`<@${interaction.member?.user.id}> Your stock results are ready!`);
+
+		// Define and return the paginated menu of supported Countries
+		const pagination = new Pagination(interaction, pages);
+		await pagination.send();
+	}
+
+	// Define the command that's used to grab stock information for a givel list of store ids and article number
+	@Slash()
+	async stores(@SlashOption("store_ids") store_ids: string, @SlashOption("article_number") article_number: string, interaction: CommandInteraction): Promise<void> {
+		// Format the article number accordingly
+		let article = article_number.replaceAll('.', '').trim();
+		var stores = [];
+
+		// Iterate over each of the passed stores and format accordingly
+		for (const store_id of store_ids.split(',')) {
+			// Grab the store instance
+			const store = ikea_stores.default.findOneById(store_id.trim());
+
+			// Validate the store id
+			if(!/^\d+$/.test(store_id.trim()) || store == undefined) {
+				// Reply with an error message
+				await interaction.reply(`Oops... Unfortunately, the following store id is invalid or cannot be found (**${store_id}**). Try \`/store country country_code:\` (where \`country_code\` is the countries respective "code" which can be found using the \`/countries\` command) to view a list of all stores for a given country.`);
+
+				// Return to stop further processing
+				return;
+			}
+
+			// Check to see if the store was found
+			if(store) {
+				// Push the store index to the stores array
+				stores.push(store);
+			}
+		}
+
+		// Check to see if the article number is invalid
+		if((article.toLowerCase().startsWith('s') && article.length != 9) || (/^\d+$/.test(article) && article.length != 8)) {
+			// Reply with an error message
+			await interaction.reply('Oops... That article number is invalid. Please try again. (looks something like s12345678 or 123.456.78 found either on the page or in the URL)');
+
+			// Return to stop further processing
+			return;
+		}
+
+		// Reply with a general message that the results will be shared once available and that it can take a little bit
+		await interaction.reply('Thanks! It may take a little bit to capture all the results and I\'ll share them once available!');
+
+		// Create an object that will store the stores for the given country and their respcetive inventory
+		var stores_stock: {[key: string]: any} = {};
+
+		// Iterate over each of the items in the stores array
+		for (const store of stores) {
+			// Query for the articles stock
+			let item_stock = await Stock.checkAvailability(store.buCode, article);
+
+			// Check to see if the item has a slightly different article number
+			if(typeof item_stock == 'object' && item_stock.stock !== undefined && item_stock.article !== undefined) {
+				// Update the respective references
+				article = item_stock.article;
+				item_stock = item_stock.stock;
+			}
+
+			// Check to see if the item_stock is valid and didn't return an error
+			if(!(typeof item_stock === 'string' || item_stock instanceof String)) {
+				// Add the respective stock information to the obejct
+				stores_stock[store.buCode] = item_stock;
+			}
+		}
+
+		// Check to see if there's no stock information to list
+		if (Object.keys(stores_stock).length <= 0) {
+			// Reply with an error message
+			await interaction.reply('Oops... Unfortunately we\'re unable to display stock information for this article under these stores as there\'s no stock information currently. Please try again later.');
+
+			// Return to stop further processing
+			return;
+		}
+
+		// Define the embed array
+		var pages: MessageEmbed[] = [];
+
+		// Iterate over the countries and handle accordingly
+		for (const store_buCode in stores_stock) {
+			// Create a few required variables
+			const store = ikea_stores.default.findOneById(store_buCode);
+			const country = getCountry(store.countryCode);
+			const current_page = Object.keys(stores_stock).indexOf(store_buCode);
+			const total_pages = Object.keys(stores_stock).length;
+			const store_stock = stores_stock[store_buCode];
 
 			// Push the formatted embed to the pages array
 			pages.push(

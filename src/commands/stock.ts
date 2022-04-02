@@ -21,7 +21,7 @@ import * as ikea_stores from "../../node_modules/ikea-availability-checker/sourc
 export abstract class Stock {
 	// Define the command that's used to grab stock information for a given store and article
 	@Slash()
-	async store(@SlashOption("store_id") store_id: string, @SlashOption("article_number") article_number: string, interaction: CommandInteraction): Promise<any> {
+	async store(@SlashOption("store_id", { description: "Store id to query against a single store", type: 'STRING', required: true }) store_id: string, @SlashOption("article_number", { description: "article number (123.456.78/12345678 or s12345678)", type: 'STRING', required: true }) article_number: string, interaction: CommandInteraction): Promise<any> {
 		// GRab the respective store and format the article number accordingly
 		const store = ikea_stores.default.findOneById(store_id);
 		const country = getCountry(store.countryCode);
@@ -116,7 +116,7 @@ export abstract class Stock {
 
 	// Define the command that's used to grab stock information for a given country code and article
 	@Slash()
-	async country(@SlashOption("country_code") country_code: string, @SlashOption("article_number") article_number: string, interaction: CommandInteraction): Promise<void> {
+	async country(@SlashOption("country_code", { description: "Country code to check stock of article for all stores in this country", type: 'STRING', required: true }) country_code: string, @SlashOption("article_number", { description: "article number (123.456.78/12345678 or s12345678)", type: 'STRING', required: true }) article_number: string, interaction: CommandInteraction): Promise<void> {
 		// Grab the respective country and format the article number accordingly
 		const country = getCountry(country_code);
 		let article = article_number.replaceAll('.', '').trim();
@@ -212,7 +212,7 @@ export abstract class Stock {
 
 	// Define the command that's used to grab stock information for a givel list of store ids and article number
 	@Slash()
-	async stores(@SlashOption("store_ids") store_ids: string, @SlashOption("article_number") article_number: string, interaction: CommandInteraction): Promise<void> {
+	async stores(@SlashOption("store_ids", { description: "Comma separated list of store ids to check the article stock", type: 'STRING', required: true }) store_ids: string, @SlashOption("article_number", { description: "article number (123.456.78/12345678 or s12345678)", type: 'STRING', required: true }) article_number: string, interaction: CommandInteraction): Promise<void> {
 		// Format the article number accordingly
 		let article = article_number.replaceAll('.', '').trim();
 		var stores = [];

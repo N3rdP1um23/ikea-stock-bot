@@ -19,7 +19,7 @@ import { Country, Store, supported_countries, supported_stores } from "../consta
 export abstract class Stores {
 	// Define the command that's used to grab a stores information based on the passed id
 	@Slash()
-	async store(@SlashOption("store_id") store_id: string, interaction: CommandInteraction): Promise<void> {
+	async store(@SlashOption("store_id", { description: "Store id to list the respective store information for", type: 'STRING', required: true }) store_id: string, interaction: CommandInteraction): Promise<void> {
 		// Grab the respective store
 		const store = supported_stores.find((store: Store) => store.buCode == store_id);
 
@@ -55,7 +55,7 @@ export abstract class Stores {
 
 	// Define the command that's used to grab all stores for a given country
 	@Slash()
-	async country(@SlashOption("country_code") country_code: string, interaction: CommandInteraction): Promise<void> {
+	async country(@SlashOption("country_code", { description: "Country code to display all stores for the given country", type: 'STRING', required: true }) country_code: string, interaction: CommandInteraction): Promise<void> {
 		// Grab the respective country
 		const country = supported_countries.find((country: Country) => country.code == country_code);
 

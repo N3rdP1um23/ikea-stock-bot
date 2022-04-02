@@ -37,7 +37,7 @@ export abstract class Stores {
 		const store_country = supported_countries.find((country: Country) => country.code == store.countryCode);
 
 		// Send the stores information
-		await interaction.channel?.send({embeds: [
+		await interaction.reply({embeds: [
 			new MessageEmbed()
 			.setTitle(`**Ikea :flag_${country.code}: ${country.name} - ${store.name}**`)
 			.addFields(

@@ -8,12 +8,14 @@
 
 // Import the required files
 import * as store_data from "./data/stores.json" assert { type: 'json' };
+import * as ikea_stores from "../node_modules/ikea-availability-checker/source/lib/stores.js";
 
 // Define a Country type
 export type Country = {
 	code: string;
 	name: string;
-	stores: any[]
+	stores: any[];
+	language: string;
 };
 
 // Define a Store type
@@ -32,194 +34,238 @@ export const supported_countries: Country[] = [
 	{
 		code: 'au',
 		name: 'Australia',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'au').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('au').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('au')
 	},
 	{
 		code: 'at',
 		name: 'Austria',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'at').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('at').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('at')
 	},
 	{
 		code: 'be',
 		name: 'Belgium',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'be').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('be').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('be')
 	},
 	{
 		code: 'ca',
 		name: 'Canada',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'ca').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('ca').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('ca')
 	},
 	{
 		code: 'cn',
 		name: 'China',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'cn').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('cn').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('cn')
 	},
 	{
 		code: 'hr',
 		name: 'Croatia',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'hr').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('hr').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('hr')
 	},
 	{
 		code: 'cz',
 		name: 'Czech Republic',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'cz').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('cz').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('cz')
 	},
 	{
 		code: 'dk',
 		name: 'Denmark',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'dk').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('dk').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('dk')
 	},
 	{
 		code: 'fi',
 		name: 'Finland',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'fi').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('fi').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('fi')
 	},
 	{
 		code: 'fr',
 		name: 'France',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'fr').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('fr').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('fr')
 	},
 	{
 		code: 'de',
 		name: 'Germany',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'de').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('de').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('de')
 	},
 	{
 		code: 'hk',
 		name: 'Hong Kong',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'hk').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('hk').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('hk')
 	},
 	{
 		code: 'hu',
 		name: 'Hungary',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'hu').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('hu').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('hu')
 	},
 	{
 		code: 'ie',
 		name: 'Ireland',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'ie').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('ie').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('ie')
 	},
 	{
 		code: 'it',
 		name: 'Italy',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'it').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('it').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('it')
 	},
 	{
 		code: 'jp',
 		name: 'Japan',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'jp').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('jp').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('jp')
 	},
 	{
 		code: 'jo',
 		name: 'Jordan',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'jo').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('jo').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('jo')
 	},
 	{
 		code: 'kw',
 		name: 'Kuwait',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'kw').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('kw').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('kw')
 	},
 	{
 		code: 'lt',
 		name: 'Lithuania',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'lt').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('lt').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('lt')
 	},
 	{
 		code: 'my',
 		name: 'Malaysia',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'my').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('my').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('my')
 	},
 	{
 		code: 'nl',
 		name: 'Netherlands',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'nl').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('nl').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('nl')
 	},
 	{
 		code: 'no',
 		name: 'Norway',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'no').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('no').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('no')
 	},
 	{
 		code: 'pl',
 		name: 'Poland',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'pl').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('pl').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('pl')
 	},
 	{
 		code: 'pt',
 		name: 'Portugal',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'pt').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('pt').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('pt')
 	},
 	{
 		code: 'qa',
 		name: 'Qatar',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'qa').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('qa').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('qa')
 	},
 	{
 		code: 'ro',
 		name: 'Romania',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'ro').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('ro').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('ro')
 	},
 	{
 		code: 'ru',
 		name: 'Russia',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'ru').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('ru').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('ru')
 	},
 	{
 		code: 'sa',
 		name: 'Saudi Arabia',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'sa').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('sa').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('sa')
 	},
 	{
 		code: 'sg',
 		name: 'Singapore',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'sg').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('sg').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('sg')
 	},
 	{
 		code: 'sk',
 		name: 'Slovakia',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'sk').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('sk').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('sk')
 	},
 	{
 		code: 'kr',
 		name: 'South Korea',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'kr').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('kr').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('kr')
 	},
 	{
 		code: 'es',
 		name: 'Spain',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'es').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('es').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('es')
 	},
 	{
 		code: 'se',
 		name: 'Sweden',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'se').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('se').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('se')
 	},
 	{
 		code: 'ch',
 		name: 'Switzerland',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'ch').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('ch').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('ch')
 	},
 	{
 		code: 'tw',
 		name: 'Taiwan',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'tw').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('tw').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('tw')
 	},
 	{
 		code: 'th',
 		name: 'Thailand',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'th').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('th').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('th')
 	},
 	{
 		code: 'gb',
 		name: 'United Kingdom',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'gb').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('gb').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('gb')
 	},
 	{
 		code: 'us',
 		name: 'United States',
-		stores: supported_stores.filter((store: Store) => store.countryCode == 'us').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name))
+		stores: ikea_stores.default.findByCountryCode('us').sort((store_a: Store, store_b: Store) => store_a.name.localeCompare(store_b.name)),
+		language: ikea_stores.default.getLanguageCode('us')
 	},
 ];
+
+// Define a function to handle getting a country by country_code
+export function getCountry(country_code: string) {
+	// Retun the respective country code
+	return supported_countries.find((country: Country) => country.code == country_code.toLowerCase().trim());
+}
 
 // Export the different stock option colors
 export enum stock_status_colourss {

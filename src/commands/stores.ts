@@ -71,7 +71,7 @@ export abstract class Stores {
 		// Define the embed array
 		var pages: MessageEmbed[] = [];
 
-		// Iterate over the countries and handle accordinglt
+		// Iterate over the countries and handle accordingly
 		for (var i = 0 ; i < country.stores.length; i += 2) {
 			// Create an array that will support holding the embedded fields
 			var fields = [];

@@ -21,7 +21,7 @@ export abstract class Countries {
 		// Define the embed array
 		var pages: MessageEmbed[] = [];
 
-		// Iterate over the countries and handle accordinglt
+		// Iterate over the countries and handle accordingly
 		for (var i = 0 ; i < supported_countries.length; i += 2) {
 			// Create an array that will support holding the embedded fields
 			var fields = [];
@@ -43,6 +43,7 @@ export abstract class Countries {
 					{ name: 'Stores', value: supported_countries[i + 1].stores.length.toString() || '0', inline: true },
 				);
 			}
+			
 			// Push the formatted embed to the pages array
 			pages.push(
 				new MessageEmbed()

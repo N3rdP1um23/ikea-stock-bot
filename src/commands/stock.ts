@@ -10,7 +10,7 @@
 import { CommandInteraction, EmbedFieldData, MessageEmbed } from "discord.js";
 import { Discord, Slash, SlashGroup, SlashOption } from "discordx";
 import { Pagination } from "@discordx/pagination";
-import { stock_status_colourss, stock_status_icon } from "../constants.ts";
+import { stock_status_colourss, stock_status_icon, Store, getCountry } from "../constants.ts";
 import * as ikea_checker from "ikea-availability-checker";
 import * as ikea_stores from "../../node_modules/ikea-availability-checker/source/lib/stores.js";
 
@@ -21,9 +21,10 @@ import * as ikea_stores from "../../node_modules/ikea-availability-checker/sourc
 export abstract class Stock {
 	// Define the command that's used to grab stock information for a given store and article
 	@Slash()
-	async store(@SlashOption("store_id") store_id: string, @SlashOption("article_number") article_number: string, interaction: CommandInteraction): Promise<void> {
+	async store(@SlashOption("store_id") store_id: string, @SlashOption("article_number") article_number: string, interaction: CommandInteraction): Promise<any> {
 		// GRab the respective store and format the article number accordingly
 		const store = ikea_stores.default.findOneById(store_id);
+		const country = getCountry(store.countryCode);
 		const article = article_number.replaceAll('.', '').trim();
 
 		// Check to see if the requred store exists
@@ -89,10 +90,11 @@ export abstract class Stock {
 		// Send the stock information
 		await interaction.channel?.send({embeds: [
 			new MessageEmbed()
-			.setTitle(`**Ikea ${store.name} - ${article_number}**`)
+			.setTitle(`**Ikea ${country.name} - ${store.name} - ${article_number} Stock**`)
 			.setColor(stock_status_colourss[item_stock.probability])
 			.addFields(
 				{ name: 'Name', value: store.name, inline: true },
+				{ name: 'Id', value: store.buCode, inline: true },
 				{ name: 'Article', value: article_number, inline: true },
 				{ name: '\u200B', value: '\u200B' },
 				{ name: 'Current Stock', value: item_stock.stock.toString() || '0', inline: true },
@@ -100,9 +102,97 @@ export abstract class Stock {
 				{ name: 'Estimated Restock Date', value: ((item_stock.restockDate) ? item_stock.restockDate.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'), inline: true },
 				...forecast_data
 			)
-			.setURL(`https://www.ikea.com/${store.countryCode}/en/search/products/?q=${item_stock.productId}`)
-			.setFooter(`As of ${item_stock.createdAt.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' })} @ ${item_stock.createdAt.toLocaleTimeString([], {  hour12: false, hour: '2-digit', minute: '2-digit' })}`)
+			.setURL(`https://www.ikea.com/${country.code}/${country.language}/search/products/?q=${item_stock.productId}`)
+			.setFooter(`As of ${item_stock.createdAt.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' })} @ ${item_stock.createdAt.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}`)
 		]});
+	}
+
+	// Define the command that's used to grab stock information for a given country code and article
+	@Slash()
+	async country(@SlashOption("country_code") country_code: string, @SlashOption("article_number") article_number: string, interaction: CommandInteraction): Promise<void> {
+		// Grab the respective country and format the article number accordingly
+		const country = getCountry(country_code);
+		const article = article_number.replaceAll('.', '').trim();
+
+		// Check to see if the requred country exists
+		if (!country) {
+			// Reply with an error message
+			await interaction.reply('Oops... That country wasn\'t found. Try `/countries` to view a list of all countries and their respective country code.');
+
+			// Return to stop further processing
+			return;
+		}
+
+		// Check to see if the article number is invalid
+		if((article.toLowerCase().startsWith('s') && article.length != 9) || (/^\d+$/.test(article) && article.length != 8)) {
+			// Reply with an error message
+			await interaction.reply('Oops... That article number is invalid. Please try again. (looks something like s12345678 or 123.456.78 found either on the page or in the URL)');
+
+			// Return to stop further processing
+			return;
+		}
+
+		// Reply with a general message that the results will be shared once available and that it can take a little bit
+		await interaction.reply('Thanks! It may take a little bit to capture all the results and I\'ll share them once available!');
+
+		// Create an object that will store the stores for the given country and their respcetive inventory
+		var country_store_stock: {[key: string]: any} = {};
+
+		// Iterate over each of the items in the countries array
+		for (const store of country.stores) {
+			// Query for the articles stock
+			const item_stock = await Stock.checkAvailability(store.buCode, article);
+
+			// Check to see if the item_stock is valid and didn't return an error
+			if(!(typeof item_stock === 'string' || item_stock instanceof String)) {
+				// Add the respective stock information to the obejct
+				country_store_stock[store.buCode] = item_stock;
+			}
+		}
+
+		// Check to see if there's no stock information to list
+		if (Object.keys(country_store_stock).length <= 0) {
+			// Reply with an error message
+			await interaction.reply('Oops... Unfortunately we\'re unable to display stock information for this article under this country. Please try again later.');
+
+			// Return to stop further processing
+			return;
+		}
+
+		// Define the embed array
+		var pages: MessageEmbed[] = [];
+
+		// Iterate over the countries and handle accordingly
+		for (const store_buCode in country_store_stock) {
+			// Create a few required variables
+			const store = ikea_stores.default.findOneById(store_buCode);
+			const current_page = Object.keys(country_store_stock).indexOf(store_buCode);
+			const total_pages = Object.keys(country_store_stock).length;
+			const store_stock = country_store_stock[store_buCode];
+
+			// Push the formatted embed to the pages array
+			pages.push(
+				new MessageEmbed()
+				.setFooter({ text: `Page ${Math.ceil(current_page + 1)} of ${Math.ceil(total_pages)}` })
+				.setTitle(`**Ikea ${country.name} - ${store.name} - ${article_number} Stock**`)
+				.addFields(
+					{ name: 'Name', value: store.name, inline: true },
+					{ name: 'id', value: store.buCode, inline: true },
+					{ name: 'Article', value: article_number, inline: true },
+					{ name: '\u200B', value: '\u200B' },
+					{ name: 'Current Stock', value: store_stock.stock.toString() || '0', inline: true },
+					{ name: 'Probability of Availability', value: `${stock_status_icon[store_stock.probability]} ${store_stock.probability}`, inline: true },
+					{ name: 'Estimated Restock Date', value: ((store_stock.restockDate) ? store_stock.restockDate.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'), inline: true },
+				)
+			);
+		}
+
+		// Notify the user that the stock results are ready
+		await interaction.channel?.send(`<@${interaction.member?.user.id}> Your stock results are ready!`);
+
+		// Define and return the paginated menu of supported Countries
+		const pagination = new Pagination(interaction, pages);
+		await pagination.send();
 	}
 
 	// The following function is used to handle querying for stock availability for an item based on the store

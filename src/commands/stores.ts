@@ -10,7 +10,7 @@
 import { CommandInteraction, MessageEmbed } from "discord.js";
 import { Discord, Slash, SlashGroup, SlashOption } from "discordx";
 import { Pagination } from "@discordx/pagination";
-import { Country, Store, supported_countries, supported_stores } from "../constants.ts";
+import { Country, Store, supported_countries, supported_stores, getCountry } from "../constants.ts";
 
 // Define the Stores class that stores all store related commands
 @Discord()
@@ -22,6 +22,7 @@ export abstract class Stores {
 	async store(@SlashOption("store_id") store_id: string, interaction: CommandInteraction): Promise<void> {
 		// Grab the respective store
 		const store = supported_stores.find((store: Store) => store.buCode == store_id);
+		const country = getCountry(store.countryCode);
 
 		// Check to see if the store wasn't found
 		if(store == undefined) {
@@ -38,18 +39,16 @@ export abstract class Stores {
 		// Send the stores information
 		await interaction.channel?.send({embeds: [
 			new MessageEmbed()
-			.setTitle(`**Ikea ${store.name}**`)
+			.setTitle(`**Ikea :flag_${country.code}: ${country.name} - ${store.name}**`)
 			.addFields(
 				{ name: 'Name', value: store.name, inline: true },
 				{ name: 'Id', value: store.buCode, inline: true },
 				{ name: '\u200B', value: '\u200B' },
 				{ name: 'Country', value: `:flag_${store_country?.code}: ${store_country?.name}`, inline: true },
 				{ name: 'Latitude', value: store.coordinates[1].toString(), inline: true },
-				{ name: 'Longitude', value: store.coordinates[0].toString(), inline: true },
-				{ name: '\u200B', value: '\u200B' },
-				{ name: 'Google Maps', value: `https://www.google.com/maps/search/?api=1&query=Ikea+${store.name}`, inline: true },
+				{ name: 'Longitude', value: store.coordinates[0].toString(), inline: true }
 			)
-			.setURL(`https://www.google.com/maps/search/?api=1&query=Ikea+${store.name}`)
+			.setURL(`https://www.ikea.com/${country.code}/${country.language}/stores/${store.name.toLowerCase()}`)
 		]});
 	}
 
@@ -95,6 +94,7 @@ export abstract class Stores {
 			// Push the formatted embed to the pages array
 			pages.push(
 				new MessageEmbed()
+				.setURL(`https://www.ikea.com/${country.code}/${country.language}/stores`)
 				.setTitle(`**Ikea Stores in :flag_${country.code}: ${country.name}**`)
 				.setFooter({ text: `Page ${Math.ceil((i / 2)) + 1} of ${Math.ceil(country.stores.length / 2)}` })
 				.addFields(fields)

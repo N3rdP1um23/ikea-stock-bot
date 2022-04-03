@@ -195,7 +195,7 @@ export abstract class Stock {
 		}
 
 		// Define the embed array
-		var pages: MessageEmbed[] = [];
+		var pages: any[] = [];
 
 		// Iterate over the countries and handle accordingly
 		for (const store_buCode in country_store_stock) {
@@ -203,24 +203,38 @@ export abstract class Stock {
 			const store = ikea_stores.default.findOneById(store_buCode);
 			const current_page = Object.keys(country_store_stock).indexOf(store_buCode);
 			const total_pages = Object.keys(country_store_stock).length;
-			const store_stock = country_store_stock[store_buCode];
+			const store_stock = country_store_stock[store_buCode];// Query to see if the user has already set a reminder for this store and article item
+			const has_setup_reminder = Db.userHasReminder(interaction.user, store.buCode, article);
 
 			// Push the formatted embed to the pages array
-			pages.push(
-				new MessageEmbed()
-				.setURL(`https://www.ikea.com/${country.code}/${country.language}/p/-${article}`)
-				.setTitle(`**Ikea :flag_${country.code}: ${country.name} - ${store.name} - ${article} Stock**`)
-				.setFooter({ text: `Page ${Math.ceil(current_page + 1)} of ${Math.ceil(total_pages)}` })
-				.addFields(
-					{ name: 'Name', value: store.name, inline: true },
-					{ name: 'Id', value: store.buCode, inline: true },
-					{ name: 'Article', value: article, inline: true },
-					{ name: '\u200B', value: '\u200B' },
-					{ name: 'Current Stock', value: store_stock.stock.toString() || '0', inline: true },
-					{ name: 'Probability of Availability', value: `${stock_status_icon[store_stock.probability]} ${store_stock.probability}`, inline: true },
-					{ name: 'Estimated Restock Date', value: ((store_stock.restockDate) ? store_stock.restockDate.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'), inline: true },
-				)
-			);
+			pages.push({
+				components: [
+					new MessageActionRow().addComponents([
+						new MessageButton({
+							customId: (!has_setup_reminder) ? 'set-stock-reminder' : 'unset-stock-reminder',
+							label: (!has_setup_reminder) ? 'Set Stock Reminder' : 'Unset Stock Reminder',
+							emoji: !(has_setup_reminder) ? '🔔' : '🔕',
+							style: (!has_setup_reminder) ? 'PRIMARY' : 'PRIMARY',
+							disabled: (!has_setup_reminder) ? false : false ,
+						}),
+					]),
+				],
+				embeds: [
+					new MessageEmbed()
+					.setURL(`https://www.ikea.com/${country.code}/${country.language}/p/-${article}`)
+					.setTitle(`**Ikea :flag_${country.code}: ${country.name} - ${store.name} - ${article} Stock**`)
+					.setFooter({ text: `Page ${Math.ceil(current_page + 1)} of ${Math.ceil(total_pages)}` })
+					.addFields(
+						{ name: 'Name', value: store.name, inline: true },
+						{ name: 'Id', value: store.buCode, inline: true },
+						{ name: 'Article', value: article, inline: true },
+						{ name: '\u200B', value: '\u200B' },
+						{ name: 'Current Stock', value: store_stock.stock.toString() || '0', inline: true },
+						{ name: 'Probability of Availability', value: `${stock_status_icon[store_stock.probability]} ${store_stock.probability}`, inline: true },
+						{ name: 'Estimated Restock Date', value: ((store_stock.restockDate) ? store_stock.restockDate.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'), inline: true },
+					)
+				],
+			});
 		}
 
 		// Notify the user that the stock results are ready

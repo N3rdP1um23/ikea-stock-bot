@@ -9,7 +9,7 @@
 // Import required packages
 import "reflect-metadata";
 import * as dotenv from 'dotenv';
-import { AnyChannel, Channel, Intents, Interaction, Message } from "discord.js";
+import { Intents, Interaction, Message } from "discord.js";
 import { Client } from "discordx";
 import { dirname, importx } from "@discordx/importer";
 import Db from "./db.ts";
@@ -49,8 +49,11 @@ client.once("ready", async () => {
     // Display in the console that the bot has started
     console.log("Bot started");
 
-	// Call the function to handle reminders
-	Stock.handleReminders();
+	// Check to see if stock notifications should be sent when the bot is ready
+	if(process.env.SEND_NOTIFICATIONS_ON_STARTUP == undefined && (process.env.SEND_NOTIFICATIONS_ON_STARTUP !== undefined && process.env.SEND_NOTIFICATIONS_ON_STARTUP === 'true')) {
+		// Call the function to handle reminders
+		Stock.handleReminders();
+	}
 });
 
 // Add an event handler to handle once the client interaction is created
@@ -65,7 +68,7 @@ client.on("messageCreate", (message: Message) => {
 	client.executeCommand(message);
 });
 
-// Define a ffunction that handles importing commands and signing the bot in
+// Define a function that handles importing commands and signing the bot in
 async function run() {
 	// Import commands
 	await importx(

@@ -7,7 +7,7 @@
  */
 
 // Import required packages
-import { ButtonInteraction, Channel, CommandInteraction, EmbedFieldData, MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
+import { ButtonInteraction, Channel, CommandInteraction, EmbedFieldData, MessageActionRow, MessageButton, MessageComponent, MessageEmbed } from "discord.js";
 import { ButtonComponent, Discord, Slash, SlashGroup, SlashOption } from "discordx";
 import { Pagination } from "@discordx/pagination";
 import { stock_status_colours, stock_status_icon, getCountry, StockReminder } from "../constants.ts";
@@ -48,7 +48,7 @@ export abstract class Stock {
 		}
 
 		// Reply with a general message that the results will be shared once available and that it can take a little bit
-		await interaction.reply('Thanks! It may take a little bit to grab the stock information and I\'ll let you know once it\'s available!');
+		await interaction.reply('Just processing the stock results now and will share them with you shortly!');
 
 		// Query for stock availability
 		let item_stock = await Stock.checkAvailability(store.buCode, article);
@@ -161,7 +161,7 @@ export abstract class Stock {
 		}
 
 		// Reply with a general message that the results will be shared once available and that it can take a little bit
-		await interaction.reply('Thanks! It may take a little bit to grab the stock information and I\'ll let you know once it\'s available!');
+		await interaction.reply('Just processing the stock results now and will share them with you shortly!');
 
 		// Create an object that will store the stores for the given country and their respcetive inventory
 		var country_store_stock: {[key: string]: any} = {};
@@ -283,7 +283,7 @@ export abstract class Stock {
 		}
 
 		// Reply with a general message that the results will be shared once available and that it can take a little bit
-		await interaction.reply('Thanks! It may take a little bit to grab the stock information and I\'ll let you know once it\'s available!');
+		await interaction.reply('Just processing the stock results now and will share them with you shortly!');
 
 		// Create an object that will store the stores for the given country and their respcetive inventory
 		var stores_stock: {[key: string]: any} = {};
@@ -413,6 +413,9 @@ export abstract class Stock {
 		// Handle adding the reminder
 		const has_set_reminder = Db.userSetReminder(interaction.user, store_id, article, interaction.channel, interaction.guild);
 
+		// Check and store the pagination button if they exist
+		const pagination_buttons: any = (interaction.message.components && interaction.message.components.length > 1) ? interaction.message.components[1] : [];
+
 		// Check to see if the reminder has been set
 		if(has_set_reminder) {
 			// Update the interaction to visually disable the button
@@ -426,8 +429,6 @@ export abstract class Stock {
 							style: 'SUCCESS',
 							disabled: true
 						}),
-					]),
-					new MessageActionRow().addComponents([
 						new MessageButton({
 							customId: 'unset-stock-reminder',
 							label: 'Unset Stock Reminder',
@@ -435,7 +436,8 @@ export abstract class Stock {
 							style: 'PRIMARY',
 							disabled: false
 						}),
-					])
+					]),
+					pagination_buttons
 				]
 			});
 		}
@@ -451,6 +453,9 @@ export abstract class Stock {
 		// Handle removing the reminder
 		const has_unset_reminder = Db.userRemoveReminder(interaction.user, store_id, article, interaction.channel, interaction.guild);
 
+		// Check and store the pagination button if they exist
+		const pagination_buttons: any = (interaction.message.components && interaction.message.components.length > 1) ? interaction.message.components[1] : [];
+
 		// Check to see if the reminder has been set
 		if(has_unset_reminder) {
 			// Update the interaction to visually disable the button
@@ -464,8 +469,6 @@ export abstract class Stock {
 							style: 'SUCCESS',
 							disabled: true
 						}),
-					]),
-					new MessageActionRow().addComponents([
 						new MessageButton({
 							customId: 'set-stock-reminder',
 							label: 'Set Stock Reminder',
@@ -473,7 +476,8 @@ export abstract class Stock {
 							style: 'PRIMARY',
 							disabled: false
 						}),
-					])
+					]),
+					pagination_buttons
 				]
 			});
 		}

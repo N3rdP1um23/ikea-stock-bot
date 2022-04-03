@@ -47,6 +47,9 @@ export abstract class Stock {
 			return;
 		}
 
+		// Reply with a general message that the results will be shared once available and that it can take a little bit
+		await interaction.reply('Thanks! It may take a little bit to grab the stock information and I\'ll let you know once it\'s available!');
+
 		// Query for stock availability
 		let item_stock = await Stock.checkAvailability(store.buCode, article);
 
@@ -96,24 +99,40 @@ export abstract class Stock {
 			forecast_data.push({ name: 'Forecast', value: 'No forecast data available currently.' });
 		}
 
+		// Query to see if the user has already set a reminder for this store and article item
+		const has_setup_reminder = Db.userHasReminder(interaction.user, store.buCode, article);
+
 		// Send the stock information
-		await interaction.reply({embeds: [
-			new MessageEmbed()
-			.setURL(`https://www.ikea.com/${country.code}/${country.language}/p/-${article}`)
-			.setColor(stock_status_colours[item_stock.probability])
-			.setTitle(`**Ikea :flag_${country.code}: ${country.name} - ${store.name} - ${article} Stock**`)
-			.setFooter({ text: `As of ${item_stock.createdAt.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' })} @ ${item_stock.createdAt.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}` })
-			.addFields(
-				{ name: 'Name', value: store.name, inline: true },
-				{ name: 'Id', value: store.buCode, inline: true },
-				{ name: 'Article', value: article, inline: true },
-				{ name: '\u200B', value: '\u200B' },
-				{ name: 'Current Stock', value: item_stock.stock.toString() || '0', inline: true },
-				{ name: 'Probability of Availability', value: `${stock_status_icon[item_stock.probability]} ${item_stock.probability}`, inline: true },
-				{ name: 'Estimated Restock Date', value: ((item_stock.restockDate) ? item_stock.restockDate.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'), inline: true },
-				...forecast_data
-			)
-		]});
+		await interaction.channel?.send({
+			components: [
+				new MessageActionRow().addComponents([
+					new MessageButton({
+						customId: (!has_setup_reminder) ? 'set-stock-reminder' : 'unset-stock-reminder',
+						label: (!has_setup_reminder) ? 'Set Stock Reminder' : 'Unset Stock Reminder',
+						emoji: !(has_setup_reminder) ? '🔔' : '🔕',
+						style: (!has_setup_reminder) ? 'PRIMARY' : 'PRIMARY',
+						disabled: (!has_setup_reminder) ? false : false ,
+					}),
+				]),
+			],
+			embeds: [
+				new MessageEmbed()
+				.setURL(`https://www.ikea.com/${country.code}/${country.language}/p/-${article}`)
+				.setColor(stock_status_colours[item_stock.probability])
+				.setTitle(`**Ikea :flag_${country.code}: ${country.name} - ${store.name} - ${article} Stock**`)
+				.setFooter({ text: `As of ${item_stock.createdAt.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' })} @ ${item_stock.createdAt.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}` })
+				.addFields(
+					{ name: 'Name', value: store.name, inline: true },
+					{ name: 'Id', value: store.buCode, inline: true },
+					{ name: 'Article', value: article, inline: true },
+					{ name: '\u200B', value: '\u200B' },
+					{ name: 'Current Stock', value: item_stock.stock.toString() || '0', inline: true },
+					{ name: 'Probability of Availability', value: `${stock_status_icon[item_stock.probability]} ${item_stock.probability}`, inline: true },
+					{ name: 'Estimated Restock Date', value: ((item_stock.restockDate) ? item_stock.restockDate.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'), inline: true },
+					...forecast_data
+				)
+			]
+		});
 	}
 
 	// Define the command that's used to grab stock information for a given country code and article
@@ -142,7 +161,7 @@ export abstract class Stock {
 		}
 
 		// Reply with a general message that the results will be shared once available and that it can take a little bit
-		await interaction.reply('Thanks! It may take a little bit to capture all the results and I\'ll share them once available!');
+		await interaction.reply('Thanks! It may take a little bit to grab the stock information and I\'ll let you know once it\'s available!');
 
 		// Create an object that will store the stores for the given country and their respcetive inventory
 		var country_store_stock: {[key: string]: any} = {};
@@ -250,7 +269,7 @@ export abstract class Stock {
 		}
 
 		// Reply with a general message that the results will be shared once available and that it can take a little bit
-		await interaction.reply('Thanks! It may take a little bit to capture all the results and I\'ll share them once available!');
+		await interaction.reply('Thanks! It may take a little bit to grab the stock information and I\'ll let you know once it\'s available!');
 
 		// Create an object that will store the stores for the given country and their respcetive inventory
 		var stores_stock: {[key: string]: any} = {};

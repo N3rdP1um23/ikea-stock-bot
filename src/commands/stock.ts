@@ -7,12 +7,14 @@
  */
 
 // Import required packages
-import { CommandInteraction, EmbedFieldData, MessageEmbed } from "discord.js";
-import { Discord, Slash, SlashGroup, SlashOption } from "discordx";
+import { ButtonInteraction, Channel, CommandInteraction, EmbedFieldData, MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
+import { ButtonComponent, Discord, Slash, SlashGroup, SlashOption } from "discordx";
 import { Pagination } from "@discordx/pagination";
-import { stock_status_colours, stock_status_icon, Store, getCountry } from "../constants.ts";
+import { stock_status_colours, stock_status_icon, getCountry, StockReminder } from "../constants.ts";
 import * as ikea_checker from "ikea-availability-checker";
 import * as ikea_stores from "../../node_modules/ikea-availability-checker/source/lib/stores.js";
+import Db from "../db.ts";
+import { client } from "../main.ts";
 
 // Define the Stock class that stores all stock related commands
 @Discord()
@@ -192,7 +194,7 @@ export abstract class Stock {
 				.setFooter({ text: `Page ${Math.ceil(current_page + 1)} of ${Math.ceil(total_pages)}` })
 				.addFields(
 					{ name: 'Name', value: store.name, inline: true },
-					{ name: 'id', value: store.buCode, inline: true },
+					{ name: 'Id', value: store.buCode, inline: true },
 					{ name: 'Article', value: article, inline: true },
 					{ name: '\u200B', value: '\u200B' },
 					{ name: 'Current Stock', value: store_stock.stock.toString() || '0', inline: true },
@@ -258,17 +260,20 @@ export abstract class Stock {
 			// Query for the articles stock
 			let item_stock = await Stock.checkAvailability(store.buCode, article);
 
-			// Check to see if the item has a slightly different article number
-			if(typeof item_stock == 'object' && item_stock.stock !== undefined && item_stock.article !== undefined) {
-				// Update the respective references
-				article = item_stock.article;
-				item_stock = item_stock.stock;
-			}
+			// Check to see if the stock was found
+			if(item_stock !== undefined) {
+				// Check to see if the item has a slightly different article number
+				if(typeof item_stock == 'object' && item_stock.stock !== undefined && item_stock.article !== undefined) {
+					// Update the respective references
+					article = item_stock.article;
+					item_stock = item_stock.stock;
+				}
 
-			// Check to see if the item_stock is valid and didn't return an error
-			if(!(typeof item_stock === 'string' || item_stock instanceof String)) {
-				// Add the respective stock information to the obejct
-				stores_stock[store.buCode] = item_stock;
+				// Check to see if the item_stock is valid and didn't return an error
+				if(!(typeof item_stock === 'string' || item_stock instanceof String)) {
+					// Add the respective stock information to the obejct
+					stores_stock[store.buCode] = item_stock;
+				}
 			}
 		}
 
@@ -282,7 +287,7 @@ export abstract class Stock {
 		}
 
 		// Define the embed array
-		var pages: MessageEmbed[] = [];
+		var pages: any[] = [];
 
 		// Iterate over the countries and handle accordingly
 		for (const store_buCode in stores_stock) {
@@ -293,22 +298,38 @@ export abstract class Stock {
 			const total_pages = Object.keys(stores_stock).length;
 			const store_stock = stores_stock[store_buCode];
 
+			// Query to see if the user has already set a reminder for this store and article item
+			const has_setup_reminder = Db.userHasReminder(interaction.user, store.buCode, article);
+
 			// Push the formatted embed to the pages array
-			pages.push(
-				new MessageEmbed()
-				.setURL(`https://www.ikea.com/${country.code}/${country.language}/p/-${article}`)
-				.setTitle(`**Ikea :flag_${country.code}: ${country.name} - ${store.name} - ${article} Stock**`)
-				.setFooter({ text: `Page ${Math.ceil(current_page + 1)} of ${Math.ceil(total_pages)}` })
-				.addFields(
-					{ name: 'Name', value: store.name, inline: true },
-					{ name: 'id', value: store.buCode, inline: true },
-					{ name: 'Article', value: article, inline: true },
-					{ name: '\u200B', value: '\u200B' },
-					{ name: 'Current Stock', value: store_stock.stock.toString() || '0', inline: true },
-					{ name: 'Probability of Availability', value: `${stock_status_icon[store_stock.probability]} ${store_stock.probability}`, inline: true },
-					{ name: 'Estimated Restock Date', value: ((store_stock.restockDate) ? store_stock.restockDate.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'), inline: true },
-				)
-			);
+			pages.push({
+				components: [
+					new MessageActionRow().addComponents([
+						new MessageButton({
+							customId: (!has_setup_reminder) ? 'set-stock-reminder' : 'unset-stock-reminder',
+							label: (!has_setup_reminder) ? 'Set Stock Reminder' : 'Unset Stock Reminder',
+							emoji: !(has_setup_reminder) ? '🔔' : '🔕',
+							style: (!has_setup_reminder) ? 'PRIMARY' : 'PRIMARY',
+							disabled: (!has_setup_reminder) ? false : false ,
+						}),
+					]),
+				],
+				embeds: [
+					new MessageEmbed()
+					.setURL(`https://www.ikea.com/${country.code}/${country.language}/p/-${article}`)
+					.setTitle(`**Ikea :flag_${country.code}: ${country.name} - ${store.name} - ${article} Stock**`)
+					.setFooter({ text: `Page ${Math.ceil(current_page + 1)} of ${Math.ceil(total_pages)}` })
+					.addFields(
+						{ name: 'Name', value: store.name, inline: true },
+						{ name: 'Id', value: store.buCode, inline: true },
+						{ name: 'Article', value: article, inline: true },
+						{ name: '\u200B', value: '\u200B' },
+						{ name: 'Current Stock', value: store_stock.stock.toString() || '0', inline: true },
+						{ name: 'Probability of Availability', value: `${stock_status_icon[store_stock.probability]} ${store_stock.probability}`, inline: true },
+						{ name: 'Estimated Restock Date', value: ((store_stock.restockDate) ? store_stock.restockDate.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'), inline: true },
+					)
+				],
+			});
 		}
 
 		// Notify the user that the stock results are ready
@@ -345,6 +366,133 @@ export abstract class Stock {
 			if (error.request.res.statusCode === 404) {
 				// Return with an error message
 				return 'Oops... An item with that article number wasn\'t found. Please try again.';
+			}
+		}
+	}
+
+	// Register the set stock reminder action
+	@ButtonComponent("set-stock-reminder")
+	setStockReminder(interaction: ButtonInteraction) {
+		// Grab the respective store and article number
+		const store_id = interaction.message.embeds[0].fields?.find(field => field.name == 'Id')?.value;
+		const article = interaction.message.embeds[0].fields?.find(field => field.name == 'Article')?.value;
+
+		// Handle adding the reminder
+		const has_set_reminder = Db.userSetReminder(interaction.user, store_id, article, interaction.channel, interaction.guild);
+
+		// Check to see if the reminder has been set
+		if(has_set_reminder) {
+			// Update the interaction to visually disable the button
+			interaction.update({
+				components: [
+					new MessageActionRow().addComponents([
+						new MessageButton({
+							customId: 'set-stock-reminder',
+							label: 'Reminder Set!',
+							emoji: '👌',
+							style: 'SUCCESS',
+							disabled: true
+						}),
+					]),
+					new MessageActionRow().addComponents([
+						new MessageButton({
+							customId: 'unset-stock-reminder',
+							label: 'Unset Stock Reminder',
+							emoji: '🔕',
+							style: 'PRIMARY',
+							disabled: false
+						}),
+					])
+				]
+			});
+		}
+	}
+
+	// Register the unset stock reminder action
+	@ButtonComponent("unset-stock-reminder")
+	unsetStockReminder(interaction: ButtonInteraction) {
+		// Grab the respective store and article number
+		const store_id = interaction.message.embeds[0].fields?.find(field => field.name == 'Id')?.value;
+		const article = interaction.message.embeds[0].fields?.find(field => field.name == 'Article')?.value;
+
+		// Handle removing the reminder
+		const has_unset_reminder = Db.userRemoveReminder(interaction.user, store_id, article, interaction.channel, interaction.guild);
+
+		// Check to see if the reminder has been set
+		if(has_unset_reminder) {
+			// Update the interaction to visually disable the button
+			interaction.update({
+				components: [
+					new MessageActionRow().addComponents([
+						new MessageButton({
+							customId: 'unset-stock-reminder',
+							label: 'Reminder Remove!',
+							emoji: '👌',
+							style: 'SUCCESS',
+							disabled: true
+						}),
+					]),
+					new MessageActionRow().addComponents([
+						new MessageButton({
+							customId: 'set-stock-reminder',
+							label: 'Set Stock Reminder',
+							emoji: '🔔',
+							style: 'PRIMARY',
+							disabled: false
+						}),
+					])
+				]
+			});
+		}
+	}
+
+	// The following function is used to handle handling reminders
+	static async handleReminders() {
+		// Grab all of the current offers from the database
+		const reminders: StockReminder[] = Db.getReminders();
+
+		// Iterate over each of the reminders and handling accordingly
+		for (const reminder of reminders) {
+			// Query for the articles stock
+			const store = ikea_stores.default.findOneById(reminder.ikea_store_id);
+			const country = getCountry(store.countryCode);
+
+			// Query for the articles stock
+			let item_stock = await Stock.checkAvailability(store.buCode, reminder.ikea_article);
+
+			// Check to see if the item_stock is valid and didn't return an error
+			if(!(typeof item_stock === 'string' || item_stock instanceof String)) {
+				// Check to see if the item actually has stock
+				if (item_stock.stock > 0) {
+					client.channels.cache.get('772259249966809121').send({
+						content: `Hey! <@${reminder.user}>! Looks like an item you had previously looked up is now in stock!`,
+						embeds: [
+							new MessageEmbed()
+							.setURL(`https://www.ikea.com/${country.code}/${country.language}/p/-${reminder.ikea_article}`)
+							.setTitle(`**Ikea :flag_${country.code}: ${country.name} - ${store.name} - ${reminder.ikea_article} Stock**`)
+							.addFields(
+								{ name: 'Name', value: store.name, inline: true },
+								{ name: 'Id', value: store.buCode, inline: true },
+								{ name: 'Article', value: reminder.ikea_article, inline: true },
+								{ name: '\u200B', value: '\u200B' },
+								{ name: 'Current Stock', value: item_stock.stock.toString() || '0', inline: true },
+								{ name: 'Probability of Availability', value: `${stock_status_icon[item_stock.probability]} ${item_stock.probability}`, inline: true },
+								{ name: 'Estimated Restock Date', value: ((item_stock.restockDate) ? item_stock.restockDate.toLocaleDateString(undefined,  { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'), inline: true },
+							)
+						],
+						components: [
+							new MessageActionRow().addComponents([
+								new MessageButton({
+									customId: 'unset-stock-reminder',
+									label: 'Unset Stock Reminder',
+									emoji: '🔕',
+									style: 'PRIMARY',
+									disabled: false ,
+								}),
+							]),
+						],
+					})
+				}
 			}
 		}
 	}

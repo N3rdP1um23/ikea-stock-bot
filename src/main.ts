@@ -2,32 +2,34 @@
  *
  * March 28, 2022
  * N3rdP1um23
- * The folloeing file is used as the main entry point into the bot
+ * The following file is used as the main entry point into the bot
  *
  */
 
 // Import required packages
 import "reflect-metadata";
 import * as dotenv from 'dotenv';
-import { Intents, Interaction, Message } from "discord.js";
+import { AnyChannel, Channel, Intents, Interaction, Message } from "discord.js";
 import { Client } from "discordx";
 import { dirname, importx } from "@discordx/importer";
+import Db from "./db.ts";
+import { Stock } from "./commands/stock.ts";
 
 // Load environment file
 dotenv.config();
 
 // Export the bot client instanace
 export const client = new Client({
-  simpleCommand: {
-    prefix: "!",
-  },
-  intents: [
-    Intents.FLAGS.GUILDS,
-    Intents.FLAGS.GUILD_MEMBERS,
-    Intents.FLAGS.GUILD_MESSAGES,
-    Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-  ],
-  botGuilds: [(client) => client.guilds.cache.map((guild) => guild.id)],
+	simpleCommand: {
+		prefix: "!",
+	},
+	intents: [
+		Intents.FLAGS.GUILDS,
+		Intents.FLAGS.GUILD_MEMBERS,
+		Intents.FLAGS.GUILD_MESSAGES,
+		Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+	],
+	botGuilds: [(client) => client.guilds.cache.map((guild) => guild.id)],
 });
 
 // Add an event handler to handle once the client is ready
@@ -46,15 +48,16 @@ client.once("ready", async () => {
 
     // Display in the console that the bot has started
     console.log("Bot started");
-});
 
+	// Call the function to handle reminders
+	Stock.handleReminders();
+});
 
 // Add an event handler to handle once the client interaction is created
 client.on("interactionCreate", (interaction: Interaction) => {
 	// Execute the interation
 	client.executeInteraction(interaction);
 });
-
 
 // Add an event handler to handle once the client has a newly created message
 client.on("messageCreate", (message: Message) => {
@@ -77,6 +80,15 @@ async function run() {
 
 	// Log the bot in
 	await client.login(process.env.BOT_TOKEN);
+
+	// Initialize the database
+  	Db.initializeDatabase();
+
+	// Set an hour timer to handle checking for reminders
+	setInterval(() => {
+		// Call the function to handle reminders
+		Stock.handleReminders();
+	}, (1000 * 60 * 60));
 }
 
 // Call the function to handle starting the bot

@@ -7,8 +7,10 @@
  */
 
 // Import the required files
-import * as store_data from "./data/stores.json" assert { type: 'json' };
 import * as ikea_stores from "../node_modules/ikea-availability-checker/source/lib/stores.js";
+
+// Define the database file path
+export const database_path: string = 'data/database.db';
 
 // Define a Country type
 export type Country = {
@@ -26,8 +28,19 @@ export type Store = {
 	countryCode: string;
 };
 
+// Define the StockReminder type
+export type StockReminder = {
+	id: number;
+	user: string;
+	channel: string;
+	guild: string;
+	ikea_store_id: string;
+	ikea_article: string;
+	created_at: string;
+}
+
 // Define the array of supported stores
-export const supported_stores: Store[] = store_data.default;
+export const supported_stores: Store[] = ikea_stores.default.data;
 
 // Define the array of supported countries
 export const supported_countries: Country[] = [

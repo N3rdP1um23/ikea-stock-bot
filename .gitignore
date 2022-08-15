@@ -107,3 +107,6 @@ dist
 
 # Disable data directory committing
 data
+
+# Visual Studio Code local files
+.vscode

@@ -8,8 +8,8 @@
 
 // Import required packages
 import "reflect-metadata";
-import * as dotenv from 'dotenv';
-import { Intents, Interaction, Message } from "discord.js";
+import * as dotenv from "dotenv";
+import { GatewayIntentBits, Interaction, Message } from "discord.js";
 import { Client } from "discordx";
 import { dirname, importx } from "@discordx/importer";
 import Db from "./db.ts";
@@ -20,78 +20,80 @@ dotenv.config();
 
 // Export the bot client instanace
 export const client = new Client({
-	simpleCommand: {
-		prefix: "!",
-	},
-	intents: [
-		Intents.FLAGS.GUILDS,
-		Intents.FLAGS.GUILD_MEMBERS,
-		Intents.FLAGS.GUILD_MESSAGES,
-		Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-	],
-	botGuilds: [(client) => client.guilds.cache.map((guild) => guild.id)],
+  simpleCommand: {
+    prefix: "!",
+  },
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions,
+  ],
+  botGuilds: [(client) => client.guilds.cache.map((guild) => guild.id)],
 });
 
 // Add an event handler to handle once the client is ready
 client.once("ready", async () => {
-    // Fetch and ensure guilds are in cache
-    await client.guilds.fetch();
+  // Fetch and ensure guilds are in cache
+  await client.guilds.fetch();
 
-    // Initialize the bots commands
-    await client.initApplicationCommands({
-        guild: { log: true },
-        global: { log: true },
-    });
+  // Initialize the bots commands
+  await client.initApplicationCommands({
+    guild: { log: true },
+    global: { log: true },
+  });
 
-    // Initialize Permissions - true to enable logging
-    await client.initApplicationPermissions(true);
+  //   // Initialize Permissions - true to enable logging
+  //   await client.initApplicationPermissions(true);
 
-    // Display in the console that the bot has started
-    console.log("Bot started");
+  // Display in the console that the bot has started
+  console.log("Bot started");
 
-	// Check to see if stock notifications should be sent when the bot is ready
-	if(process.env.SEND_NOTIFICATIONS_ON_STARTUP == undefined && (process.env.SEND_NOTIFICATIONS_ON_STARTUP !== undefined && process.env.SEND_NOTIFICATIONS_ON_STARTUP === 'true')) {
-		// Call the function to handle reminders
-		Stock.handleReminders();
-	}
+  // Check to see if stock notifications should be sent when the bot is ready
+  if (
+    process.env.SEND_NOTIFICATIONS_ON_STARTUP == undefined &&
+    process.env.SEND_NOTIFICATIONS_ON_STARTUP !== undefined &&
+    process.env.SEND_NOTIFICATIONS_ON_STARTUP === "true"
+  ) {
+    // Call the function to handle reminders
+    Stock.handleReminders();
+  }
 });
 
 // Add an event handler to handle once the client interaction is created
 client.on("interactionCreate", (interaction: Interaction) => {
-	// Execute the interation
-	client.executeInteraction(interaction);
+  // Execute the interation
+  client.executeInteraction(interaction);
 });
 
 // Add an event handler to handle once the client has a newly created message
 client.on("messageCreate", (message: Message) => {
-	// Execute the command
-	client.executeCommand(message);
+  // Execute the command
+  client.executeCommand(message);
 });
 
 // Define a function that handles importing commands and signing the bot in
 async function run() {
-	// Import commands
-	await importx(
-		dirname(import.meta.url) + "/{events,commands}/**/*.{ts,js}"
-	);
+  // Import commands
+  await importx(dirname(import.meta.url) + "/{events,commands}/**/*.{ts,js}");
 
-	// Check to see if the bot token wasn't found
-	if (!process.env.BOT_TOKEN) {
-		// Display an error message to the console
-		throw Error("Could not find BOT_TOKEN in your environment");
-	}
+  // Check to see if the bot token wasn't found
+  if (!process.env.BOT_TOKEN) {
+    // Display an error message to the console
+    throw Error("Could not find BOT_TOKEN in your environment");
+  }
 
-	// Log the bot in
-	await client.login(process.env.BOT_TOKEN);
+  // Log the bot in
+  await client.login(process.env.BOT_TOKEN);
 
-	// Initialize the database
-  	Db.initializeDatabase();
+  // Initialize the database
+  Db.initializeDatabase();
 
-	// Set an hour timer to handle checking for reminders
-	setInterval(() => {
-		// Call the function to handle reminders
-		Stock.handleReminders();
-	}, (1000 * 60 * 60));
+  // Set an hour timer to handle checking for reminders
+  setInterval(() => {
+    // Call the function to handle reminders
+    Stock.handleReminders();
+  }, 1000 * 60 * 60);
 }
 
 // Call the function to handle starting the bot
